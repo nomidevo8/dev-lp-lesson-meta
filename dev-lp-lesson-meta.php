@@ -33,3 +33,27 @@ spl_autoload_register( function( $class ) {
 add_action( 'plugins_loaded', function() {
     DevLPLessonMeta\Plugin::instance();
 } );
+
+
+/**
+ * Enqueue Bootstrap 5 for Lessons Accordion
+ */
+function devlp_enqueue_bootstrap() {
+    // Bootstrap CSS
+    wp_enqueue_style(
+        'bootstrap-css',
+        'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css',
+        [],
+        '5.3.2'
+    );
+
+    // Bootstrap JS Bundle (includes Popper)
+    wp_enqueue_script(
+        'bootstrap-js',
+        'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js',
+        [],
+        '5.3.2',
+        true
+    );
+}
+add_action( 'wp_enqueue_scripts', 'devlp_enqueue_bootstrap' );

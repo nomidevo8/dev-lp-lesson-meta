@@ -34,6 +34,9 @@ final class Plugin {
         if ( is_admin() ) {
             $this->init_admin();
         }
+
+        // Initialize shortcodes
+        $this->init_shortcodes();
     }
 
     public function register_meta() {
@@ -50,6 +53,7 @@ final class Plugin {
         register_post_meta( 'lp_lesson', Meta\Keys::DATE, $args );
         register_post_meta( 'lp_lesson', Meta\Keys::START_TIME, $args );
         register_post_meta( 'lp_lesson', Meta\Keys::END_TIME, $args );
+        register_post_meta( 'lp_lesson', Meta\Keys::SLOTS, $args );
     }
 
     private function init_admin() {
@@ -59,5 +63,12 @@ final class Plugin {
         // meta box manager
         add_action( 'add_meta_boxes', array( 'DevLPLessonMeta\\Admin\\MetaBox', 'add_meta_boxes' ) );
         add_action( 'save_post', array( 'DevLPLessonMeta\\Admin\\MetaBox', 'save_post' ), 10, 2 );
+    }
+
+    private function init_shortcodes() {
+        // Check if the shortcode class exists, then register it
+        if ( class_exists( '\\DevLPLessonMeta\\Shortcodes\\LessonsList' ) ) {
+            \DevLPLessonMeta\Shortcodes\LessonsList::register();
+        }
     }
 }

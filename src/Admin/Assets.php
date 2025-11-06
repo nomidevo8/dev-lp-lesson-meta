@@ -12,7 +12,7 @@ class Assets {
         global $post;
 
         // Only on lp_lesson edit screens
-        if ( ! isset( $post ) || $post->post_type !== Keys::POST_TYPE ) {
+        if ( ! isset( $post ) || $post->post_type !== Keys::LESSON_POST_TYPE ) {
             return;
         }
 

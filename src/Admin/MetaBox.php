@@ -15,7 +15,7 @@ class MetaBox {
             'dev_lp_lesson_manager_meta',
             __( 'Lesson Details', 'dev-lp-lesson-meta' ),
             array( __CLASS__, 'render' ),
-            Keys::POST_TYPE,
+            Keys::LESSON_POST_TYPE,
             'normal',
             'high'
         );
@@ -26,8 +26,19 @@ class MetaBox {
         $date  = get_post_meta( $post->ID, Keys::DATE, true );
         $st    = get_post_meta( $post->ID, Keys::START_TIME, true );
         $et    = get_post_meta( $post->ID, Keys::END_TIME, true );
+        $slots = get_post_meta( $post->ID, Keys::SLOTS, true );
+        $selected_course = get_post_meta( $post->ID, Keys::SYNC_COURSE, true );
 
         wp_nonce_field( Keys::NONCE_ACTION, Keys::NONCE_NAME );
+
+        // Fetch all published courses
+        $courses = get_posts( [
+            'post_type'      => Keys::COURSE_POST_TYPE,
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ] );
         ?>
         <table class="form-table">
             <tbody>
@@ -60,6 +71,29 @@ class MetaBox {
                         <input type="time" name="lp_lesson_end_time" id="lp_lesson_end_time" value="<?php echo esc_attr( $et ); ?>" class="regular-text" />
                     </td>
                 </tr>
+
+                <tr>
+                    <th><label for="lp_lesson_slots"><?php esc_html_e( 'Slots', 'dev-lp-lesson-meta' ); ?></label></th>
+                    <td>
+                        <input type="number" name="lp_lesson_slots" id="lp_lesson_slots" value="<?php echo esc_attr( $slots ); ?>" class="regular-text" />
+                    </td>
+                </tr>
+
+                <!-- ✅ Added Course Dropdown -->
+                <tr>
+                    <th><label for="lp_lesson_sync_course"><?php esc_html_e( 'Assign Course', 'dev-lp-lesson-meta' ); ?></label></th>
+                    <td>
+                        <select name="lp_lesson_sync_course" id="lp_lesson_sync_course" class="regular-text">
+                            <option value=""><?php esc_html_e( '— Select Course —', 'dev-lp-lesson-meta' ); ?></option>
+                            <?php foreach ( $courses as $course ) : ?>
+                                <option value="<?php echo esc_attr( $course->ID ); ?>" <?php selected( $selected_course, $course->ID ); ?>>
+                                    <?php echo esc_html( $course->post_title ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description"><?php esc_html_e( 'Assign this lesson to a specific course.', 'dev-lp-lesson-meta' ); ?></p>
+                    </td>
+                </tr>
             </tbody>
         </table>
         <?php
@@ -67,7 +101,7 @@ class MetaBox {
 
     public static function save_post( $post_id, $post ) {
         // Only handle our post type
-        if ( empty( $post ) || $post->post_type !== Keys::POST_TYPE ) {
+        if ( empty( $post ) || $post->post_type !== Keys::LESSON_POST_TYPE ) {
             return;
         }
 
@@ -127,6 +161,27 @@ class MetaBox {
                 update_post_meta( $post_id, Keys::END_TIME, $et );
             } else {
                 delete_post_meta( $post_id, Keys::END_TIME );
+            }
+        }
+
+        // Slots
+        if ( isset( $_POST['lp_lesson_slots'] ) ) {
+            $raw = trim( wp_unslash( $_POST['lp_lesson_slots'] ) );
+            $slots = $raw === '' ? '' : floatval( str_replace( ',', '.', $raw ) );
+            if ( $slots === '' ) {
+                delete_post_meta( $post_id, Keys::SLOTS );
+            } else {
+                update_post_meta( $post_id, Keys::SLOTS, $slots );
+            }
+        }
+
+        // ✅ Save assigned course
+        if ( isset( $_POST['lp_lesson_sync_course'] ) ) {
+            $course_id = intval( $_POST['lp_lesson_sync_course'] );
+            if ( $course_id ) {
+                update_post_meta( $post_id, Keys::SYNC_COURSE, $course_id );
+            } else {
+                delete_post_meta( $post_id, Keys::SYNC_COURSE );
             }
         }
     }
