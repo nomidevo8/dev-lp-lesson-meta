@@ -1,0 +1,4 @@
+/* Tiny admin styling for meta box spacing */
+#dev_lp_lesson_manager_meta .form-table th {
+    width: 150px;
+}
