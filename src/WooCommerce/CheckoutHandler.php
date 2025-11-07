@@ -34,10 +34,10 @@ class CheckoutHandler {
 
 
         // Reduce lesson slots after successful order
-        // add_action('woocommerce_thankyou', [CheckoutHandler::class, 'reduce_lesson_slots'], 99);
+        add_action('woocommerce_thankyou', [CheckoutHandler::class, 'reduce_lesson_slots']);
 
         // Reduce slots for cash on delivery immediately
-        add_action('woocommerce_checkout_order_processed', [CheckoutHandler::class, 'reduce_slots_cod'], 10, 3);
+        add_action('woocommerce_checkout_order_processed', [CheckoutHandler::class, 'reduce_slots_cod']);
 
         // Reduce slots for all other payments when order is completed
         add_action('woocommerce_order_status_completed', [CheckoutHandler::class, 'reduce_lesson_slots']);
@@ -230,6 +230,7 @@ class CheckoutHandler {
      * Reduce lesson slots after successful order
      */
     public static function reduce_lesson_slots($order_id) {
+        error_log("This is triggered");
         $order = wc_get_order($order_id);
         if (!$order) {
             return;
