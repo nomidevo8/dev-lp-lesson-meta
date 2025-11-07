@@ -12,6 +12,8 @@ final class Keys {
     const END_TIME   = '_lp_lesson_end_time';
     const SLOTS   = '_lp_lesson_slots';
     const SYNC_COURSE   = '_lp_lesson_sync_course';
+    const TEACHER   = '_lp_lesson_teacher';
+    const LOCATION   = '_lp_lesson_location';
 
     // Nonce
     const NONCE_ACTION = 'dev_lp_lesson_manager_save';

@@ -55,5 +55,20 @@ function devlp_enqueue_bootstrap() {
         '5.3.2',
         true
     );
+    
+    // Toaster CSS and Js
+    wp_enqueue_style(
+        'toastr-css',
+        'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css',
+        [],
+        '2.1.4'
+    );
+    wp_enqueue_script(
+        'toastr-js',
+        'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js',
+        [],
+        '2.1.4',
+        true
+    );
 }
 add_action( 'wp_enqueue_scripts', 'devlp_enqueue_bootstrap' );

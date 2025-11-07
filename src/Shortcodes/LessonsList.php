@@ -12,348 +12,176 @@ class LessonsList {
 
     public static function register() {
         add_shortcode( 'lp_lessons_list', [ __CLASS__, 'render' ] );
+        add_action( 'wp_enqueue_scripts', [ __CLASS__, 'enqueue_assets' ] );
     }
 
-    public static function render_OLD( $atts ) {
+    public static function render() {
+        ob_start();
 
-        global $wpdb;
-
-        // Table name
-        $table_name = $wpdb->prefix . 'learnpress_courses';
-
-        // 1️⃣ Get table structure
-        $table_structure = $wpdb->get_results( "DESCRIBE $table_name" );
-        echo '<h2>Table Structure</h2>';
-        echo '<pre>';
-        print_r( $table_structure );
-        echo '</pre>';
-
-        // 2️⃣ Get all data from table
-        $table_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
-        echo '<h2>All Table Data</h2>';
-        echo '<pre>';
-        print_r( $table_data );
-        echo '</pre>';
-
-        die;    
-        $atts = shortcode_atts( [
-            'limit' => 10,
-            'order' => 'DESC',
-        ], $atts, 'lp_lessons_list' );
-
-        // -----------------------
-        // Fetch Lessons
-        // -----------------------
-        $lesson_query = new \WP_Query( [
-            'post_type'      => Keys::LESSON_POST_TYPE,
-            'posts_per_page' => intval( $atts['limit'] ),
-            'order'          => sanitize_text_field( $atts['order'] ),
-            'post_status'    => 'publish',
-        ] );
-
-        echo '<h2>Lesson Posts</h2>';
-        if ( $lesson_query->have_posts() ) {
-            foreach ( $lesson_query->posts as $lesson ) {
-                // Get all meta fields dynamically
-                $lesson_meta = get_post_meta( $lesson->ID );
-                
-                // Optional: convert arrays to single values
-                $lesson_meta_single = [];
-                foreach ( $lesson_meta as $key => $values ) {
-                    $lesson_meta_single[ $key ] = maybe_unserialize( $values[0] );
-                }
-
-                $data = [
-                    'post' => $lesson,
-                    'meta' => $lesson_meta_single,
-                ];
-
-                echo '<pre>';
-                print_r( $data );
-                echo '</pre>';
-            }
-        } else {
-            echo '<p>No lessons found.</p>';
-        }
-
-        // -----------------------
-        // Fetch Courses
-        // -----------------------
-        $course_query = new \WP_Query( [
+        // Get all courses
+        $courses = get_posts([
             'post_type'      => Keys::COURSE_POST_TYPE,
-            'posts_per_page' => intval( $atts['limit'] ),
-            'order'          => sanitize_text_field( $atts['order'] ),
             'post_status'    => 'publish',
-        ] );
-
-        echo '<h2>Course Posts</h2>';
-        if ( $course_query->have_posts() ) {
-            foreach ( $course_query->posts as $course ) {
-                // Get all meta fields dynamically
-                $course_meta = get_post_meta( $course->ID );
-
-                $course_meta_single = [];
-                foreach ( $course_meta as $key => $values ) {
-                    $course_meta_single[ $key ] = maybe_unserialize( $values[0] );
-                }
-
-                $data = [
-                    'post' => $course,
-                    'meta' => $course_meta_single,
-                ];
-
-                echo '<pre>';
-                print_r( $data );
-                echo '</pre>';
-            }
-        } else {
-            echo '<p>No courses found.</p>';
-        }
-
-        wp_reset_postdata();
-
-        die;
-        
-        ob_start();
-        echo '<div class="lp-lessons-list">';
-        while ( $query->have_posts() ) {
-            $query->the_post();
-
-            $post_data = get_post();
-
-            // Get all post meta for this post
-            $all_meta = get_post_meta( $post_data->ID );
-
-            // Combine post data and meta
-            $lesson_data = [
-                'post' => $post_data,
-                'meta' => $all_meta,
-            ];
-
-            // Print it nicely
-            echo '<pre>';
-            print_r( $lesson_data );
-            echo '</pre>';
-            // $price = get_post_meta( get_the_ID(), Keys::PRICE, true );
-            // $date  = get_post_meta( get_the_ID(), Keys::DATE, true );
-            // $start = get_post_meta( get_the_ID(), Keys::START_TIME, true );
-            // $end   = get_post_meta( get_the_ID(), Keys::END_TIME, true );
-
-            // echo '<div class="lesson-item">';
-            // echo '<h3>' . esc_html( get_the_title() ) . '</h3>';
-            // echo '<ul>';
-            // echo '<li><strong>Price:</strong> ' . esc_html( $price ) . '</li>';
-            // echo '<li><strong>Date:</strong> ' . esc_html( $date ) . '</li>';
-            // echo '<li><strong>Start:</strong> ' . esc_html( $start ) . '</li>';
-            // echo '<li><strong>End:</strong> ' . esc_html( $end ) . '</li>';
-            // echo '</ul>';
-            // echo '</div>';
-        }
-        echo '</div>';
-        wp_reset_postdata();
-        return ob_get_clean();
-    }
-
-    public static function render_old2( $atts ) {
-        global $wpdb;
-
-        $atts = shortcode_atts([
-            'limit' => 10,
-            'order' => 'DESC',
-        ], $atts, 'lp_lessons_list');
-
-        $table_name = $wpdb->prefix . 'learnpress_courses';
-
-        // 1️⃣ Get courses from table
-        $courses = $wpdb->get_results(
-            "SELECT * FROM $table_name ORDER BY ID {$atts['order']} LIMIT " . intval($atts['limit']),
-            ARRAY_A
-        );
+            'posts_per_page' => -1,
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ]);
 
         if (empty($courses)) {
-            return '<p>No courses found in table.</p>';
+            echo '<div class="alert alert-info">' . esc_html__('No courses found.', 'dev-lp-lesson-meta') . '</div>';
+            return ob_get_clean();
         }
+        ?>
+        <div class="accordion" id="lpCoursesAccordion" style="width:100%;max-width:100%;">
+            <?php foreach ($courses as $index => $course) :
+                $course_id = $course->ID;
 
-        $sections = [];
+                // Get lessons for this course
+                $lessons = get_posts([
+                    'post_type'      => Keys::LESSON_POST_TYPE,
+                    'post_status'    => 'publish',
+                    'posts_per_page' => -1,
+                    'meta_key'       => Keys::SYNC_COURSE,
+                    'meta_value'     => $course_id,
+                    'orderby'        => 'date',
+                    'order'          => 'DESC',
+                ]);
 
-        // 2️⃣ Loop through courses and parse sections
-        foreach ($courses as $course) {
-            $course_json = $course['json'] ?? '';
-            if (!$course_json) continue;
+                $collapse_id = 'collapse-' . $course_id;
+                ?>
+                <div class="accordion-item mb-3 border-0 shadow-sm">
+                    <h2 class="accordion-header" id="heading-<?php echo esc_attr($course_id); ?>">
+                        <button class="accordion-button <?php echo $index !== 0 ? 'collapsed' : ''; ?>" type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#<?php echo esc_attr($collapse_id); ?>"
+                            aria-expanded="<?php echo $index === 0 ? 'true' : 'false'; ?>"
+                            aria-controls="<?php echo esc_attr($collapse_id); ?>">
+                            <?php echo esc_html($course->post_title); ?>
+                        </button>
+                    </h2>
+                    <div id="<?php echo esc_attr($collapse_id); ?>"
+                        class="accordion-collapse collapse <?php echo $index === 0 ? 'show' : ''; ?>"
+                        aria-labelledby="heading-<?php echo esc_attr($course_id); ?>"
+                        data-bs-parent="#lpCoursesAccordion">
+                        <div class="accordion-body p-0">
 
-            $course_data = json_decode($course_json, true);
-            if (empty($course_data['sections_items'])) continue;
+                            <?php if (empty($lessons)) : ?>
+                                <p class="text-muted"><?php esc_html_e('No lessons assigned to this course.', 'dev-lp-lesson-meta'); ?></p>
+                            <?php else : ?>
+                                <div class="table-responsive w-100">
+                                    <table class="table table-bordered table-striped align-middle mb-0 w-100">
+                                        <thead class="table-primary text-center">
+                                            <tr>
+                                                <th><?php esc_html_e('Date/Time', 'dev-lp-lesson-meta'); ?></th>
+                                                <th><?php esc_html_e('Lesson Name', 'dev-lp-lesson-meta'); ?></th>
+                                                <th><?php esc_html_e('Lesson Type', 'dev-lp-lesson-meta'); ?></th>
+                                                <th><?php esc_html_e('Teacher', 'dev-lp-lesson-meta'); ?></th>
+                                                <th><?php esc_html_e('Location', 'dev-lp-lesson-meta'); ?></th>
+                                                <th><?php esc_html_e('Price', 'dev-lp-lesson-meta'); ?></th>
+                                                <th><?php esc_html_e('Available Slots', 'dev-lp-lesson-meta'); ?></th>
+                                                <th><?php esc_html_e('Action', 'dev-lp-lesson-meta'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($lessons as $lesson) :
+                                                $lesson_id = $lesson->ID;
+                                                $price     = get_post_meta($lesson_id, Keys::PRICE, true);
+                                                $date      = get_post_meta($lesson_id, Keys::DATE, true);
+                                                $start     = get_post_meta($lesson_id, Keys::START_TIME, true);
+                                                $end       = get_post_meta($lesson_id, Keys::END_TIME, true);
+                                                $slots     = get_post_meta($lesson_id, Keys::SLOTS, true);
+                                                $teacher   = get_post_meta($lesson_id, Keys::TEACHER, true);
+                                                $location  = get_post_meta($lesson_id, Keys::LOCATION, true);
+                                                // Combine date and start time into one proper ISO-like string
+                                                $datetime_str = '';
+                                                if ( $date && $start ) {
+                                                    $datetime_str = date( 'Y-m-d H:i', strtotime( $date . ' ' . $start ) );
+                                                } elseif ( $date ) {
+                                                    $datetime_str = date( 'Y-m-d', strtotime( $date ) );
+                                                }
+                                                ?>
+                                                <tr class="text-center lesson-row"
+                                                    data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
+                                                    data-date="<?php echo esc_attr( $datetime_str ); ?>"
+                                                    data-price="<?php echo esc_attr( $price ); ?>"
+                                                    data-title="<?php echo esc_attr( $lesson->post_title ); ?>"
+                                                    data-course="<?php echo esc_attr( $course->post_title ); ?>">
 
-            foreach ($course_data['sections_items'] as $section) {
-                $section_name = $section['section_name'] ?? $section['title'] ?? 'Unnamed Section';
 
-                if (!isset($sections[$section_name])) {
-                    $sections[$section_name] = [
-                        'section_title' => $section_name,
-                        'lessons' => [],
-                    ];
-                }
+                                                    <td>
+                                                        <?php
+                                                        // Format date (e.g., Nov 7, 2025)
+                                                        $formatted_date = $date ? date_i18n( 'M j, Y', strtotime( $date ) ) : '';
 
-                foreach ($section['items'] as $item) {
-                    if ($item['item_type'] === 'lp_lesson') {
-                        $lesson_id = $item['item_id'];
-                        $lesson_post = get_post($lesson_id);
-                        $lesson_meta = get_post_meta($lesson_id);
+                                                        // Format start and end times with AM/PM
+                                                        $formatted_start = $start ? date_i18n( 'g:i A', strtotime( $start ) ) : '';
+                                                        $formatted_end   = $end ? date_i18n( 'g:i A', strtotime( $end ) ) : '';
 
-                        $sections[$section_name]['lessons'][] = [
-                            'post' => $lesson_post,
-                            'meta' => $lesson_meta,
-                            'course_title' => $course['post_title'], // optional
-                        ];
-                    }
-                }
-            }
-        }
+                                                        // Combine nicely
+                                                        echo esc_html( $formatted_date );
 
-        // 3️⃣ Render accordion
-        ob_start();
-        echo '<div class="lp-course-sections-accordion">';
+                                                        if ( $formatted_start || $formatted_end ) {
+                                                            echo '<br><small class="text-muted">' . esc_html( trim( $formatted_start . ( $formatted_end ? ' – ' . $formatted_end : '' ) ) ) . '</small>';
+                                                        }
+                                                        ?>
+                                                    </td>
 
-        foreach ($sections as $section) {
-            echo '<div class="lp-section">';
-            echo '<h3 class="lp-section-title">' . esc_html($section['section_title']) . '</h3>';
-            echo '<div class="lp-section-lessons">';
+                                                    <td><?php echo esc_html($lesson->post_title); ?></td>
+                                                    <td><?php echo esc_html('M') . $index + 1; ?></td>
+                                                    <td><?php echo esc_html($teacher); ?></td>
+                                                    <td><?php echo esc_html($location); ?></td>
+                                                    <td>
+                                                        <?php
+                                                        if ( $price ) {
+                                                            if ( function_exists( 'get_woocommerce_currency_symbol' ) && function_exists( 'get_woocommerce_currency' ) ) {
+                                                                $currency        = get_woocommerce_currency(); // e.g., CHF, USD, EUR
+                                                                $currency_symbol = get_woocommerce_currency_symbol( $currency ); // e.g., Fr, $, €
+                                                                echo esc_html( $currency_symbol . ' ' . $price );
+                                                            } else {
+                                                                echo esc_html( $price ); // fallback if WooCommerce isn't active
+                                                            }
+                                                        } else {
+                                                            echo '-';
+                                                        }
+                                                        ?>
+                                                    </td>
 
-            foreach ($section['lessons'] as $lesson) {
-                $lesson_title = $lesson['post']->post_title ?? 'No Title';
-                $lesson_price = $lesson['meta']['_lp_lesson_price'][0] ?? '';
-                $lesson_date  = $lesson['meta']['_lp_lesson_date'][0] ?? '';
-                $lesson_start = $lesson['meta']['_lp_lesson_start_time'][0] ?? '';
-                $lesson_end   = $lesson['meta']['_lp_lesson_end_time'][0] ?? '';
-                $course_title = $lesson['course_title'];
-
-                echo '<div class="lp-lesson-item">';
-                echo '<strong>' . esc_html($lesson_title) . '</strong>';
-                echo ' (' . esc_html($course_title) . ')<br>';
-                echo 'Price: ' . esc_html($lesson_price) . ' | ';
-                echo 'Date: ' . esc_html($lesson_date) . ' | ';
-                echo 'Start: ' . esc_html($lesson_start) . ' | ';
-                echo 'End: ' . esc_html($lesson_end);
-                echo '</div>';
-            }
-
-            echo '</div>'; // .lp-section-lessons
-            echo '</div>'; // .lp-section
-        }
-
-        echo '</div>'; // .lp-course-sections-accordion
-
-        return ob_get_clean();
-    }
-
-    
-    public static function render( $atts ) {
-        global $wpdb;
-
-        $atts = shortcode_atts([
-            'limit' => 10,
-            'order' => 'DESC',
-        ], $atts, 'lp_lessons_list');
-
-        $table_name = $wpdb->prefix . 'learnpress_courses';
-
-        // 1️⃣ Get courses from table
-        $courses = $wpdb->get_results(
-            "SELECT * FROM $table_name ORDER BY ID {$atts['order']} LIMIT " . intval($atts['limit']),
-            ARRAY_A
-        );
-
-        if (empty($courses)) {
-            return '<p>No courses found in table.</p>';
-        }
-
-        $sections = [];
-
-        // 2️⃣ Loop through courses and parse sections
-        foreach ($courses as $course) {
-            $course_json = $course['json'] ?? '';
-            if (!$course_json) continue;
-
-            $course_data = json_decode($course_json, true);
-            if (empty($course_data['sections_items'])) continue;
-
-            foreach ($course_data['sections_items'] as $section) {
-                $section_name = $section['section_name'] ?? $section['title'] ?? 'Unnamed Section';
-
-                if (!isset($sections[$section_name])) {
-                    $sections[$section_name] = [
-                        'section_title' => $section_name,
-                        'lessons' => [],
-                    ];
-                }
-
-                foreach ($section['items'] as $item) {
-                    if ($item['item_type'] === 'lp_lesson') {
-                        $lesson_id = $item['item_id'];
-                        $lesson_post = get_post($lesson_id);
-                        $lesson_meta = get_post_meta($lesson_id);
-
-                        $sections[$section_name]['lessons'][] = [
-                            'post' => $lesson_post,
-                            'meta' => $lesson_meta,
-                            'course_title' => $course['post_title'], // optional
-                        ];
-                    }
-                }
-            }
-        }
-
-        // 3️⃣ Render Bootstrap Accordion
-        ob_start();
-
-        $accordion_id = 'lpCourseAccordion_' . rand(1000, 9999);
-        echo '<div class="accordion" id="' . esc_attr($accordion_id) . '">';
-
-        $i = 0;
-        foreach ($sections as $section_name => $section) {
-            $collapse_id = $accordion_id . '_collapse_' . $i;
-            $heading_id  = $accordion_id . '_heading_' . $i;
-            ?>
-
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="<?php echo esc_attr($heading_id); ?>">
-                    <button class="accordion-button <?php echo ($i > 0 ? 'collapsed' : ''); ?>" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr($collapse_id); ?>" aria-expanded="<?php echo ($i === 0 ? 'true' : 'false'); ?>" aria-controls="<?php echo esc_attr($collapse_id); ?>">
-                        <?php echo esc_html($section['section_title']); ?>
-                    </button>
-                </h2>
-                <div id="<?php echo esc_attr($collapse_id); ?>" class="accordion-collapse collapse <?php echo ($i === 0 ? 'show' : ''); ?>" aria-labelledby="<?php echo esc_attr($heading_id); ?>" data-bs-parent="#<?php echo esc_attr($accordion_id); ?>">
-                    <div class="accordion-body">
-                        <?php foreach ($section['lessons'] as $lesson): 
-                            $lesson_title = $lesson['post']->post_title ?? 'No Title';
-                            $lesson_price = $lesson['meta']['_lp_lesson_price'][0] ?? '';
-                            $lesson_date  = $lesson['meta']['_lp_lesson_date'][0] ?? '';
-                            $lesson_start = $lesson['meta']['_lp_lesson_start_time'][0] ?? '';
-                            $lesson_end   = $lesson['meta']['_lp_lesson_end_time'][0] ?? '';
-                            $course_title = $lesson['course_title'];
-                        ?>
-                            <div class="lp-lesson-item mb-2">
-                                <strong><?php echo esc_html($lesson_title); ?></strong>
-                                (<?php echo esc_html($course_title); ?>)<br>
-                                Price: <?php echo esc_html($lesson_price); ?> |
-                                Date: <?php echo esc_html($lesson_date); ?> |
-                                Start: <?php echo esc_html($lesson_start); ?> |
-                                End: <?php echo esc_html($lesson_end); ?>
-                            </div>
-                        <?php endforeach; ?>
+                                                    <td><?php echo esc_html($slots ?: '-'); ?></td>
+                                                    <td>
+                                                        <a class="btn btn-primary btn-sm rounded-pill">
+                                                            <?php esc_html_e('Book Now', 'dev-lp-lesson-meta'); ?>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <?php
-            $i++;
-        }
-
-        echo '</div>'; // end accordion
-
+            <?php endforeach; ?>
+        </div>
+        <?php
         return ob_get_clean();
     }
 
+    public static function enqueue_assets() {
+        // Enqueue Bootstrap CSS and JS
+        wp_enqueue_script(
+            'lessons-list',
+            plugin_dir_url( dirname( __DIR__ ) ) . 'src/Shortcodes/assets/js/lessons-list.js',
+            [],
+            '5.3.23434',
+            true
+        );
+        wp_localize_script('lessons-list', 'devLesson', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('dev_lp_nonce'),
+        ]);
 
+    }
 }
 
 // Register shortcode

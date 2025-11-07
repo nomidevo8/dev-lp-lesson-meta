@@ -37,6 +37,7 @@ final class Plugin {
 
         // Initialize shortcodes
         $this->init_shortcodes();
+        $this->init_woocommerce();
     }
 
     public function register_meta() {
@@ -54,6 +55,9 @@ final class Plugin {
         register_post_meta( 'lp_lesson', Meta\Keys::START_TIME, $args );
         register_post_meta( 'lp_lesson', Meta\Keys::END_TIME, $args );
         register_post_meta( 'lp_lesson', Meta\Keys::SLOTS, $args );
+        register_post_meta( 'lp_lesson', Meta\Keys::SYNC_COURSE, $args );
+        register_post_meta( 'lp_lesson', Meta\Keys::TEACHER, $args );
+        register_post_meta( 'lp_lesson', Meta\Keys::LOCATION, $args );
     }
 
     private function init_admin() {
@@ -69,6 +73,12 @@ final class Plugin {
         // Check if the shortcode class exists, then register it
         if ( class_exists( '\\DevLPLessonMeta\\Shortcodes\\LessonsList' ) ) {
             \DevLPLessonMeta\Shortcodes\LessonsList::register();
+        }
+    }
+
+    private function init_woocommerce(){
+        if ( class_exists( '\\DevLPLessonMeta\\WooCommerce\\CheckoutHandler' ) ) {
+            \DevLPLessonMeta\WooCommerce\CheckoutHandler::register();
         }
     }
 }

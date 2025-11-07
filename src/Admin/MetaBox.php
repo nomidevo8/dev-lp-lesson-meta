@@ -28,7 +28,8 @@ class MetaBox {
         $et    = get_post_meta( $post->ID, Keys::END_TIME, true );
         $slots = get_post_meta( $post->ID, Keys::SLOTS, true );
         $selected_course = get_post_meta( $post->ID, Keys::SYNC_COURSE, true );
-
+        $teacher = get_post_meta( $post->ID, Keys::TEACHER, true );
+        $location = get_post_meta( $post->ID, Keys::LOCATION, true );
         wp_nonce_field( Keys::NONCE_ACTION, Keys::NONCE_NAME );
 
         // Fetch all published courses
@@ -94,6 +95,19 @@ class MetaBox {
                         <p class="description"><?php esc_html_e( 'Assign this lesson to a specific course.', 'dev-lp-lesson-meta' ); ?></p>
                     </td>
                 </tr>
+
+                <tr>
+                    <th><label for="lp_lesson_teacher"><?php esc_html_e( 'Teacher', 'dev-lp-lesson-meta' ); ?></label></th>
+                    <td>
+                        <input type="text" name="lp_lesson_teacher" id="lp_lesson_teacher" value="<?php echo esc_attr( $teacher ); ?>" class="regular-text" />
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="lp_lesson_location"><?php esc_html_e( 'Location', 'dev-lp-lesson-meta' ); ?></label></th>
+                    <td>
+                        <input type="text" name="lp_lesson_location" id="lp_lesson_location" value="<?php echo esc_attr( $location ); ?>" class="regular-text" />
+                    </td>
+                </tr>
             </tbody>
         </table>
         <?php
@@ -104,6 +118,9 @@ class MetaBox {
         if ( empty( $post ) || $post->post_type !== Keys::LESSON_POST_TYPE ) {
             return;
         }
+
+        error_log( 'Saving lesson meta...' );
+        error_log( print_r( $_POST, true ) );
 
         // Verify nonce
         if ( ! isset( $_POST[ Keys::NONCE_NAME ] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ Keys::NONCE_NAME ] ) ), Keys::NONCE_ACTION ) ) {
@@ -182,6 +199,24 @@ class MetaBox {
                 update_post_meta( $post_id, Keys::SYNC_COURSE, $course_id );
             } else {
                 delete_post_meta( $post_id, Keys::SYNC_COURSE );
+            }
+        }
+        if ( isset( $_POST['lp_lesson_teacher'] ) ) {
+            $teacher = sanitize_text_field( wp_unslash( $_POST['lp_lesson_teacher'] ) );
+            if ( $teacher ) {
+                update_post_meta( $post_id, Keys::TEACHER, $teacher );
+            } else {
+                delete_post_meta( $post_id, Keys::TEACHER );
+            }
+        }
+        if ( isset( $_POST['lp_lesson_location'] ) ) {
+            error_log( 'Saving Location...' );
+            error_log( print_r($_POST['lp_lesson_location'], true) );
+            $location = sanitize_text_field( wp_unslash( $_POST['lp_lesson_location'] ) );
+            if ( $location ) {
+                update_post_meta( $post_id, Keys::LOCATION, $location );
+            } else {
+                delete_post_meta( $post_id, Keys::LOCATION );
             }
         }
     }
