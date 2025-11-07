@@ -173,3 +173,96 @@
         min-height: 44px;
     }
 }
+
+
+
+
+
+/* Scoped to LP Courses Accordion */
+#lpCoursesAccordion {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto;
+}
+
+/* Accordion items */
+#lpCoursesAccordion .accordion-item {
+    border: none !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Accordion header */
+#lpCoursesAccordion .accordion-button {
+    background-color: #f8f9fa !important;
+    color: #333 !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.5rem !important;
+    width: 100%;
+    text-align: start;
+    font-size: 30px;
+}
+
+#lpCoursesAccordion .accordion-button:focus {
+    box-shadow: none !important;
+}
+
+/* Accordion body */
+#lpCoursesAccordion .accordion-body {
+    padding: 0 !important;
+}
+
+/* Table styles */
+#lpCoursesAccordion table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 0 !important;
+}
+
+#lpCoursesAccordion table th,
+#lpCoursesAccordion table td {
+    padding: 0.5rem 0.75rem !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    font-size: 0.9rem !important;
+    word-break: break-word !important;
+}
+
+#lpCoursesAccordion table th {
+    background-color: #007bff !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+}
+
+#lpCoursesAccordion table td {
+    background-color: #fff !important;
+    color: #333 !important;
+}
+
+/* Book Now button */
+#lpCoursesAccordion .btn-primary {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    font-size: 0.85rem !important;
+    padding: 0.25rem 0.75rem !important;
+    border-radius: 50px !important;
+    color: white;
+}
+
+/* Full button */
+#lpCoursesAccordion .btn-secondary {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    font-size: 0.85rem !important;
+    padding: 0.25rem 0.75rem !important;
+    border-radius: 50px !important;
+}
+
+/* Lesson full row highlight */
+#lpCoursesAccordion .lesson-full {
+    opacity: 0.7 !important;
+    pointer-events: none !important;
+}
+
+

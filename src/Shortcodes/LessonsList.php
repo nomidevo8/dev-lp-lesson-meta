@@ -163,7 +163,7 @@ class LessonsList {
         </div>
         <?php
         return ob_get_clean();
-    }
+    }   
 
     public static function enqueue_assets() {
         // Enqueue Bootstrap CSS and JS
@@ -171,7 +171,7 @@ class LessonsList {
             'lessons-list-responsive',
             plugin_dir_url( dirname( __DIR__ ) ) . 'src/Shortcodes/assets/css/lessons-list.css',
             [],
-            '1.0.0343'
+            '1.0.034343'
         );
 
         wp_enqueue_script(
