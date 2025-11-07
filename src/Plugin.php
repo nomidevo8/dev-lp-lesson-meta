@@ -38,6 +38,8 @@ final class Plugin {
         // Initialize shortcodes
         $this->init_shortcodes();
         $this->init_woocommerce();
+        // Initialize admin columns
+        $this->init_admin_columns();
     }
 
     public function register_meta() {
@@ -79,6 +81,12 @@ final class Plugin {
     private function init_woocommerce(){
         if ( class_exists( '\\DevLPLessonMeta\\WooCommerce\\CheckoutHandler' ) ) {
             \DevLPLessonMeta\WooCommerce\CheckoutHandler::register();
+        }
+    }
+
+    private function init_admin_columns() {
+        if ( class_exists( '\\DevLPLessonMeta\\Admin\\LessonsColumns' ) ) {
+            \DevLPLessonMeta\Admin\LessonsColumns::init();
         }
     }
 }
