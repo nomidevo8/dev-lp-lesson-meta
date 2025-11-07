@@ -16,6 +16,11 @@ jQuery(document).ready(function ($) {
     // Step click logic
     $('.lesson-row').on('click', function () {
         const $row = $(this);
+         // ❌ If lesson is full, do nothing
+        if ($row.hasClass('lesson-full') || parseInt($row.data('slots') || 0) <= 0) {
+            toastr.warning('This lesson is full.', 'Unavailable', { timeOut: 3000 });
+            return;
+        }
         const stepIndex = $row.closest('.accordion-item').index();
         const dateStr = $row.data('date');
         const lessonDate = new Date(dateStr);

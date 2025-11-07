@@ -119,9 +119,6 @@ class MetaBox {
             return;
         }
 
-        error_log( 'Saving lesson meta...' );
-        error_log( print_r( $_POST, true ) );
-
         // Verify nonce
         if ( ! isset( $_POST[ Keys::NONCE_NAME ] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ Keys::NONCE_NAME ] ) ), Keys::NONCE_ACTION ) ) {
             return;
@@ -210,8 +207,6 @@ class MetaBox {
             }
         }
         if ( isset( $_POST['lp_lesson_location'] ) ) {
-            error_log( 'Saving Location...' );
-            error_log( print_r($_POST['lp_lesson_location'], true) );
             $location = sanitize_text_field( wp_unslash( $_POST['lp_lesson_location'] ) );
             if ( $location ) {
                 update_post_meta( $post_id, Keys::LOCATION, $location );

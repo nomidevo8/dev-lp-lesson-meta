@@ -100,26 +100,19 @@ class LessonsList {
                                                     $datetime_str = date( 'Y-m-d', strtotime( $date ) );
                                                 }
                                                 ?>
-                                                <tr class="text-center lesson-row"
+                                                <tr class="text-center lesson-row <?php echo $slots <= 0 ? 'lesson-full' : ''; ?>"
                                                     data-lesson-id="<?php echo esc_attr( $lesson_id ); ?>"
                                                     data-date="<?php echo esc_attr( $datetime_str ); ?>"
                                                     data-price="<?php echo esc_attr( $price ); ?>"
                                                     data-title="<?php echo esc_attr( $lesson->post_title ); ?>"
                                                     data-course="<?php echo esc_attr( $course->post_title ); ?>">
 
-
                                                     <td>
                                                         <?php
-                                                        // Format date (e.g., Nov 7, 2025)
                                                         $formatted_date = $date ? date_i18n( 'M j, Y', strtotime( $date ) ) : '';
-
-                                                        // Format start and end times with AM/PM
                                                         $formatted_start = $start ? date_i18n( 'g:i A', strtotime( $start ) ) : '';
                                                         $formatted_end   = $end ? date_i18n( 'g:i A', strtotime( $end ) ) : '';
-
-                                                        // Combine nicely
                                                         echo esc_html( $formatted_date );
-
                                                         if ( $formatted_start || $formatted_end ) {
                                                             echo '<br><small class="text-muted">' . esc_html( trim( $formatted_start . ( $formatted_end ? ' – ' . $formatted_end : '' ) ) ) . '</small>';
                                                         }
@@ -133,13 +126,9 @@ class LessonsList {
                                                     <td>
                                                         <?php
                                                         if ( $price ) {
-                                                            if ( function_exists( 'get_woocommerce_currency_symbol' ) && function_exists( 'get_woocommerce_currency' ) ) {
-                                                                $currency        = get_woocommerce_currency(); // e.g., CHF, USD, EUR
-                                                                $currency_symbol = get_woocommerce_currency_symbol( $currency ); // e.g., Fr, $, €
-                                                                echo esc_html( $currency_symbol . ' ' . $price );
-                                                            } else {
-                                                                echo esc_html( $price ); // fallback if WooCommerce isn't active
-                                                            }
+                                                            $currency = function_exists('get_woocommerce_currency') ? get_woocommerce_currency() : '';
+                                                            $currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol( $currency ) : '';
+                                                            echo esc_html( $currency_symbol . ' ' . $price );
                                                         } else {
                                                             echo '-';
                                                         }
@@ -147,12 +136,20 @@ class LessonsList {
                                                     </td>
 
                                                     <td><?php echo esc_html($slots ?: '-'); ?></td>
+
                                                     <td>
-                                                        <a class="btn btn-primary btn-sm rounded-pill">
-                                                            <?php esc_html_e('Book Now', 'dev-lp-lesson-meta'); ?>
-                                                        </a>
+                                                        <?php if ( $slots > 0 ) : ?>
+                                                            <a class="btn btn-primary btn-sm rounded-pill">
+                                                                <?php esc_html_e('Book Now', 'dev-lp-lesson-meta'); ?>
+                                                            </a>
+                                                        <?php else : ?>
+                                                            <button class="btn btn-secondary btn-sm rounded-pill" disabled>
+                                                                <?php esc_html_e('Full', 'dev-lp-lesson-meta'); ?>
+                                                            </button>
+                                                        <?php endif; ?>
                                                     </td>
                                                 </tr>
+
                                             <?php endforeach; ?>
                                         </tbody>
                                     </table>
@@ -173,7 +170,7 @@ class LessonsList {
             'lessons-list',
             plugin_dir_url( dirname( __DIR__ ) ) . 'src/Shortcodes/assets/js/lessons-list.js',
             [],
-            '5.3.23434',
+            '5.3.2343433',
             true
         );
         wp_localize_script('lessons-list', 'devLesson', [

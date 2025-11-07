@@ -16,21 +16,31 @@ class CheckoutHandler {
         add_action('wp_ajax_dev_lp_create_lesson_cart', [CheckoutHandler::class, 'ajax_create_lesson_cart']);
         add_action('wp_ajax_nopriv_dev_lp_create_lesson_cart', [CheckoutHandler::class, 'ajax_create_lesson_cart']);
 
-        // 👇 Make our virtual product always purchasable site-wide
+        // Make our virtual product always purchasable site-wide
         add_filter('woocommerce_is_purchasable', [CheckoutHandler::class, 'force_purchasable'], 10, 2);
 
-        // 👇 Show lesson meta in cart and checkout
+        // Show lesson meta in cart and checkout
         add_filter('woocommerce_get_item_data', [CheckoutHandler::class, 'display_lesson_meta_in_cart'], 10, 2);
 
-        // 👇 Show lesson name instead of generic product title
+        // Show lesson name instead of generic product title
         add_filter('woocommerce_cart_item_name', [CheckoutHandler::class, 'custom_cart_item_name'], 10, 3);
 
-        // 👇 Ensure dynamic prices are applied correctly
+        // Ensure dynamic prices are applied correctly
         add_action('woocommerce_before_calculate_totals', [CheckoutHandler::class, 'apply_dynamic_prices'], 20);
 
-
+        // Customize checkout fields
         add_filter('woocommerce_checkout_fields', [CheckoutHandler::class, 'dev_woocommerce_checkout_fields'], 999);
+        add_action('woocommerce_checkout_create_order_line_item', [CheckoutHandler::class, 'add_lesson_id_to_order_item'], 10, 4);
 
+
+        // Reduce lesson slots after successful order
+        // add_action('woocommerce_thankyou', [CheckoutHandler::class, 'reduce_lesson_slots'], 99);
+
+        // Reduce slots for cash on delivery immediately
+        add_action('woocommerce_checkout_order_processed', [CheckoutHandler::class, 'reduce_slots_cod'], 10, 3);
+
+        // Reduce slots for all other payments when order is completed
+        add_action('woocommerce_order_status_completed', [CheckoutHandler::class, 'reduce_lesson_slots']);
     }
 
     /**
@@ -79,10 +89,8 @@ class CheckoutHandler {
             $teacher   = get_post_meta($lesson_id, Keys::TEACHER, true);
             $location  = get_post_meta($lesson_id, Keys::LOCATION, true);
 
-            // 🕒 Format date nicely (e.g., "Friday, November 14, 2025")
             $date_formatted = $date_raw ? date('l, F j, Y', strtotime($date_raw)) : '';
 
-            // 🕐 Convert times to AM/PM format
             $format_time = function($time_str) {
                 $timestamp = strtotime($time_str);
                 return $timestamp ? date('g:i A', $timestamp) : $time_str;
@@ -101,14 +109,7 @@ class CheckoutHandler {
                 'lesson_location' => $location,
             ];
 
-            error_log("🛒 Adding lesson {$lesson_id} to cart with data: " . print_r($cart_item_data, true));
-
-            $cart_item_key = WC()->cart->add_to_cart($product_id, 1, 0, [], $cart_item_data);
-
-            if (!$cart_item_key) {
-                error_log("⚠️ Could not add lesson {$lesson_id} to cart (product {$product_id})");
-                continue;
-            }
+            WC()->cart->add_to_cart($product_id, 1, 0, [], $cart_item_data);
         }
 
         wp_send_json_success(['checkout_url' => wc_get_checkout_url()]);
@@ -121,12 +122,10 @@ class CheckoutHandler {
         $option_key = 'dev_lp_virtual_product_id';
         $product_id = (int) get_option($option_key);
 
-        // If a valid product already exists, return it
         if ($product_id && get_post_status($product_id) === 'publish') {
             return $product_id;
         }
 
-        // Create a new virtual simple product
         $product = new \WC_Product_Simple();
         $product->set_name('Lesson Booking');
         $product->set_status('publish');
@@ -147,34 +146,19 @@ class CheckoutHandler {
     public static function display_lesson_meta_in_cart($item_data, $cart_item) {
         if (!empty($cart_item['lesson_id'])) {
             if (!empty($cart_item['lesson_title'])) {
-                $item_data[] = [
-                    'key'   => __('Lesson', 'dev-lp-lesson-meta'),
-                    'value' => esc_html($cart_item['lesson_title']),
-                ];
+                $item_data[] = ['key' => __('Lesson', 'dev-lp-lesson-meta'), 'value' => esc_html($cart_item['lesson_title'])];
             }
             if (!empty($cart_item['lesson_date'])) {
-                $item_data[] = [
-                    'key'   => __('Date', 'dev-lp-lesson-meta'),
-                    'value' => esc_html($cart_item['lesson_date']),
-                ];
+                $item_data[] = ['key' => __('Date', 'dev-lp-lesson-meta'), 'value' => esc_html($cart_item['lesson_date'])];
             }
             if (!empty($cart_item['lesson_start']) && !empty($cart_item['lesson_end'])) {
-                $item_data[] = [
-                    'key'   => __('Time', 'dev-lp-lesson-meta'),
-                    'value' => esc_html("{$cart_item['lesson_start']} - {$cart_item['lesson_end']}"),
-                ];
+                $item_data[] = ['key' => __('Time', 'dev-lp-lesson-meta'), 'value' => esc_html("{$cart_item['lesson_start']} - {$cart_item['lesson_end']}")];
             }
             if (!empty($cart_item['lesson_teacher'])) {
-                $item_data[] = [
-                    'key'   => __('Teacher', 'dev-lp-lesson-meta'),
-                    'value' => esc_html($cart_item['lesson_teacher']),
-                ];
+                $item_data[] = ['key' => __('Teacher', 'dev-lp-lesson-meta'), 'value' => esc_html($cart_item['lesson_teacher'])];
             }
             if (!empty($cart_item['lesson_location'])) {
-                $item_data[] = [
-                    'key'   => __('Location', 'dev-lp-lesson-meta'),
-                    'value' => esc_html($cart_item['lesson_location']),
-                ];
+                $item_data[] = ['key' => __('Location', 'dev-lp-lesson-meta'), 'value' => esc_html($cart_item['lesson_location'])];
             }
         }
         return $item_data;
@@ -184,9 +168,7 @@ class CheckoutHandler {
      * Apply correct lesson price to cart items
      */
     public static function apply_dynamic_prices($cart) {
-        if (is_admin() && !defined('DOING_AJAX')) {
-            return;
-        }
+        if (is_admin() && !defined('DOING_AJAX')) return;
 
         foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
             if (isset($cart_item['lesson_id'])) {
@@ -203,37 +185,84 @@ class CheckoutHandler {
      */
     public static function custom_cart_item_name($product_name, $cart_item, $cart_item_key) {
         if (isset($cart_item['lesson_title'])) {
-            $date = isset($cart_item['lesson_date']) && $cart_item['lesson_date']
-                ? ' (' . esc_html($cart_item['lesson_date']) . ')'
-                : '';
+            $date = isset($cart_item['lesson_date']) ? ' (' . esc_html($cart_item['lesson_date']) . ')' : '';
             return esc_html($cart_item['lesson_title'] . $date);
         }
         return $product_name;
     }
 
+    /**
+     * Customize WooCommerce checkout fields
+     */
+    public static function dev_woocommerce_checkout_fields($fields) {
+        $keep = ['billing_first_name', 'billing_last_name', 'billing_email', 'billing_phone'];
+        foreach ($fields['billing'] as $key => $field) {
+            if (!in_array($key, $keep)) unset($fields['billing'][$key]);
+        }
+        $fields['shipping'] = [];
+        if (isset($fields['order']['order_comments'])) unset($fields['order']['order_comments']);
+        return $fields;
+    }
+
+    public static function add_lesson_id_to_order_item($item, $cart_item_key, $values, $order) {
+        if (!empty($values['lesson_id'])) {
+            $item->add_meta_data('lesson_id', $values['lesson_id'], true);
+        }
+        if (!empty($values['lesson_title'])) {
+            $item->add_meta_data('lesson_title', $values['lesson_title'], true);
+        }
+    }
 
     /**
-     * Customize WooCommerce checkout fields if needed
+     * Reduce slots immediately for COD orders
      */
+    public static function reduce_slots_cod($order_id, $posted_data, $order) {
+        if (!$order) return;
 
-    public static function dev_woocommerce_checkout_fields($fields) {
-        // Keep only necessary billing fields
-        $keep = ['billing_first_name', 'billing_last_name', 'billing_email', 'billing_phone'];
+        if ($order->get_payment_method() === 'cod') {
+            // Call your existing reduce_lesson_slots logic
+            self::reduce_lesson_slots($order_id);
+        }
+    }
 
-        foreach ($fields['billing'] as $key => $field) {
-            if (!in_array($key, $keep)) {
-                unset($fields['billing'][$key]);
+
+    /**
+     * Reduce lesson slots after successful order
+     */
+    public static function reduce_lesson_slots($order_id) {
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
+
+        // Check if slots were already reduced
+        if ($order->get_meta('_slots_reduced')) {
+            return;
+        }
+
+
+        foreach ($order->get_items() as $item) {
+            $lesson_id = $item->get_meta('lesson_id');
+            $quantity  = $item->get_quantity();
+
+            if ($lesson_id) {
+                $slots = (int) get_post_meta($lesson_id, Keys::SLOTS, true);
+                $slots_before = $slots;
+                $slots -= $quantity;
+                update_post_meta($lesson_id, Keys::SLOTS, max(0, $slots));
+
+                // Optionally mark full
+                if ($slots <= 0) {
+                    update_post_meta($lesson_id, '_is_full', 'yes');
+                }
+
             }
         }
 
-        // Remove shipping fields entirely
-        $fields['shipping'] = [];
-
-        // Optionally remove order notes
-        if (isset($fields['order']['order_comments'])) {
-            unset($fields['order']['order_comments']);
-        }
-
-        return $fields;
+        // Mark order as slots reduced
+        $order->update_meta_data('_slots_reduced', 'yes');
+        $order->save();
     }
+
+
 }
