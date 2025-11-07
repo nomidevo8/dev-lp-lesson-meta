@@ -105,7 +105,8 @@ class LessonsList {
                                                     data-date="<?php echo esc_attr( $datetime_str ); ?>"
                                                     data-price="<?php echo esc_attr( $price ); ?>"
                                                     data-title="<?php echo esc_attr( $lesson->post_title ); ?>"
-                                                    data-course="<?php echo esc_attr( $course->post_title ); ?>">
+                                                   data-course="<?php echo esc_attr(            $course->post_title ); ?>"
+                                                    data-slots="<?php echo esc_attr( $slots ); ?>">
 
                                                     <td>
                                                         <?php
@@ -166,13 +167,22 @@ class LessonsList {
 
     public static function enqueue_assets() {
         // Enqueue Bootstrap CSS and JS
+        wp_enqueue_style(
+            'lessons-list-responsive',
+            plugin_dir_url( dirname( __DIR__ ) ) . 'src/Shortcodes/assets/css/lessons-list.css',
+            [],
+            '1.0.0343'
+        );
+
         wp_enqueue_script(
             'lessons-list',
             plugin_dir_url( dirname( __DIR__ ) ) . 'src/Shortcodes/assets/js/lessons-list.js',
             [],
-            '5.3.2343433',
+            '5.3.2343343345',
             true
         );
+
+        
         wp_localize_script('lessons-list', 'devLesson', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('dev_lp_nonce'),

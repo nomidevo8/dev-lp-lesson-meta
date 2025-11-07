@@ -127,7 +127,7 @@ class CheckoutHandler {
         }
 
         $product = new \WC_Product_Simple();
-        $product->set_name('Lesson Booking');
+        $product->set_name('Course Booking');
         $product->set_status('publish');
         $product->set_catalog_visibility('hidden');
         $product->set_virtual(true);

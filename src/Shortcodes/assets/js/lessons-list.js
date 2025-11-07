@@ -14,13 +14,17 @@ jQuery(document).ready(function ($) {
     });
 
     // Step click logic
-    $('.lesson-row').on('click', function () {
-        const $row = $(this);
-         // ❌ If lesson is full, do nothing
+    $(document).on('click', '.lesson-row .btn-primary', function (e) {
+        e.preventDefault(); // prevent default link behavior if any
+        const $btn = $(this);
+        const $row = $btn.closest('.lesson-row');
+
+        // ❌ If lesson is full, do nothing
         if ($row.hasClass('lesson-full') || parseInt($row.data('slots') || 0) <= 0) {
             toastr.warning('This lesson is full.', 'Unavailable', { timeOut: 3000 });
             return;
         }
+
         const stepIndex = $row.closest('.accordion-item').index();
         const dateStr = $row.data('date');
         const lessonDate = new Date(dateStr);
@@ -87,10 +91,8 @@ jQuery(document).ready(function ($) {
                         .addClass('opacity-50');
                 }
 
-                // Show toastr warning
                 toastr.warning('No lessons available for the selected date.', 'No Lessons', { timeOut: 4000 });
-
-                return; // Stop further execution (don’t open next step)
+                return;
             }
 
             // ✅ Expand next accordion step
@@ -113,6 +115,7 @@ jQuery(document).ready(function ($) {
     });
 
 
+
     // 🧱 Prevent clicking locked steps manually
     $(document).on('click', '.disabled-step .accordion-button', function (e) {
         e.preventDefault();
@@ -125,8 +128,8 @@ jQuery(document).ready(function ($) {
         $('#lesson-summary').remove();
 
         let total = 0;
-        let html = '<div id="lesson-summary" class="card mt-4 shadow-sm p-4" style="width:100%;max-width:100%;">';
-        html += '<h4>Booking Summary</h4>';
+        let html = '<div id="lesson-summary" class="card mt-4 shadow-sm p-3 p-md-4" style="width:100%;max-width:100%;">';
+        html += '<h4 class="mb-3">Booking Summary</h4>';
         html += '<ul class="list-group mb-3">';
 
         $.each(selections, function (index, lesson) {
@@ -143,18 +146,20 @@ jQuery(document).ready(function ($) {
             };
             const formattedDate = lesson.date.toLocaleString('en-US', options);
 
-            html += `<li class="list-group-item d-flex justify-content-between flex-column flex-md-row">
-                        <div>
+            html += `<li class="list-group-item d-flex justify-content-between align-items-start flex-column flex-sm-row">
+                        <div class="mb-2 mb-sm-0">
                             <strong>${lesson.title}</strong><br>
                             <small class="text-muted">${formattedDate}</small>
                         </div>
-                        <span class="mt-2 mt-md-0">${lesson.price.toFixed(2)}</span>
+                        <span class="fw-bold">${lesson.price.toFixed(2)}</span>
                     </li>`;
         });
 
         html += `</ul>
-                <h5 class="text-end">Total: <strong>${total.toFixed(2)}</strong></h5>
-                <button id="goToCheckout" class="btn btn-success mt-3" style="width: fit-content; align-self: end;">Go to Checkout</button>
+                <div class="d-flex justify-content-between align-items-center flex-column flex-sm-row">
+                    <h5 class="mb-3 mb-sm-0">Total: <strong>${total.toFixed(2)}</strong></h5>
+                    <button id="goToCheckout" class="btn btn-success">Go to Checkout</button>
+                </div>
                 </div>`;
 
         $('#lpCoursesAccordion').after(html);

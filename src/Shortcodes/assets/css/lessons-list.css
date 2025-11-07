@@ -1,0 +1,175 @@
+/* Mobile Responsive Styles for Lessons List - No Card Wrapping */
+
+/* Keep table responsive wrapper */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Horizontal scrollable table on mobile */
+@media (max-width: 768px) {
+    /* Enable horizontal scroll */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -0.75rem; /* Negative margin to allow full width scroll */
+    }
+
+    /* Reduce table font size */
+    .table {
+        font-size: 0.75rem;
+        min-width: 100%;
+        white-space: nowrap;
+    }
+
+    /* Compact table cells */
+    .table th,
+    .table td {
+        padding: 0.5rem 0.4rem;
+        vertical-align: middle;
+    }
+
+    /* Make header text smaller and wrap if needed */
+    .table thead th {
+        font-size: 0.7rem;
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    /* Compact buttons */
+    .btn-sm {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Smaller date/time text */
+    .table tbody td small {
+        font-size: 0.65rem;
+    }
+
+    /* Fix sticky columns if needed (optional) */
+    .table tbody tr td:first-child,
+    .table thead tr th:first-child {
+        position: sticky;
+        left: 0;
+        background: white;
+        z-index: 10;
+    }
+
+    .table tbody tr.table-success td:first-child {
+        background: #d4edda;
+    }
+
+    /* Adjust accordion body padding */
+    .accordion-body {
+        padding: 0.5rem !important;
+    }
+}
+
+/* Very small screens - make text even smaller */
+@media (max-width: 576px) {
+    .table {
+        font-size: 0.7rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.4rem 0.3rem;
+    }
+
+    .table thead th {
+        font-size: 0.65rem;
+    }
+
+    .btn-sm {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .accordion-button {
+        font-size: 0.9rem;
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+/* Tablet adjustments (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .table {
+        font-size: 0.85rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem;
+    }
+}
+
+/* Summary card mobile responsive */
+@media (max-width: 576px) {
+    #lesson-summary {
+        padding: 0.75rem !important;
+    }
+
+    #lesson-summary h4 {
+        font-size: 1.1rem;
+    }
+
+    #lesson-summary h5 {
+        font-size: 1rem;
+    }
+
+    #lesson-summary .list-group-item {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    #lesson-summary .btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Ensure full-width container */
+#lpCoursesAccordion {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Add scroll indicator shadow */
+@media (max-width: 768px) {
+    .table-responsive {
+        background:
+            linear-gradient(to right, white 30%, rgba(255,255,255,0)),
+            linear-gradient(to right, rgba(255,255,255,0), white 70%) 0 100%,
+            radial-gradient(farthest-side at 0% 50%, rgba(0,0,0,.2), rgba(0,0,0,0)),
+            radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.2), rgba(0,0,0,0)) 0 100%;
+        background-repeat: no-repeat;
+        background-color: white;
+        background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+        background-position: 0 0, 100%, 0 0, 100%;
+        background-attachment: local, local, scroll, scroll;
+    }
+
+    /* Add visual hint that table is scrollable */
+    .table-responsive::after {
+        content: "← Scroll →";
+        display: block;
+        text-align: center;
+        font-size: 0.7rem;
+        color: #6c757d;
+        padding: 0.25rem;
+        font-style: italic;
+    }
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 768px) {
+    .lesson-row {
+        min-height: 44px;
+        cursor: pointer;
+    }
+
+    .accordion-button {
+        min-height: 44px;
+    }
+}
