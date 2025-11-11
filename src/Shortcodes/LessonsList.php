@@ -171,7 +171,7 @@ class LessonsList {
             'lessons-list-responsive',
             plugin_dir_url( dirname( __DIR__ ) ) . 'src/Shortcodes/assets/css/lessons-list.css',
             [],
-            '1.0.034343'
+            '1.0.0343433344'
         );
 
         wp_enqueue_script(
