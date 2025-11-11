@@ -8,11 +8,13 @@
 
 /* Horizontal scrollable table on mobile */
 @media (max-width: 768px) {
+
     /* Enable horizontal scroll */
     .table-responsive {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        margin: 0 -0.75rem; /* Negative margin to allow full width scroll */
+        margin: 0 -0.75rem;
+        /* Negative margin to allow full width scroll */
     }
 
     /* Reduce table font size */
@@ -139,10 +141,10 @@
 @media (max-width: 768px) {
     .table-responsive {
         background:
-            linear-gradient(to right, white 30%, rgba(255,255,255,0)),
-            linear-gradient(to right, rgba(255,255,255,0), white 70%) 0 100%,
-            radial-gradient(farthest-side at 0% 50%, rgba(0,0,0,.2), rgba(0,0,0,0)),
-            radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.2), rgba(0,0,0,0)) 0 100%;
+            linear-gradient(to right, white 30%, rgba(255, 255, 255, 0)),
+            linear-gradient(to right, rgba(255, 255, 255, 0), white 70%) 0 100%,
+            radial-gradient(farthest-side at 0% 50%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)),
+            radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, .2), rgba(0, 0, 0, 0)) 0 100%;
         background-repeat: no-repeat;
         background-color: white;
         background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
@@ -188,14 +190,14 @@
 /* Accordion items */
 #lpCoursesAccordion .accordion-item {
     border: none !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
     margin-bottom: 1rem !important;
 }
 
 /* Accordion header */
 #lpCoursesAccordion .accordion-button {
-    background-color: #f8f9fa !important;
-    color: #333 !important;
+    background-color: #0FA5C6 !important;
+    color: white !important;
     font-weight: 600 !important;
     padding: 0.75rem 1rem !important;
     border-radius: 0.5rem !important;
@@ -230,9 +232,9 @@
 }
 
 #lpCoursesAccordion table th {
-    background-color: #007bff !important;
-    color: #fff !important;
+    background-color: black !important;
     font-weight: 600 !important;
+    color: white;
 }
 
 #lpCoursesAccordion table td {
@@ -242,14 +244,16 @@
 
 /* Book Now button */
 #lpCoursesAccordion .btn-primary {
-    background-color: #007bff !important;
-    border-color: #007bff !important;
+    background-color: #0FA5C6 !important;
+    border-color: #0FA5C6 !important;
     font-size: 0.85rem !important;
     padding: 0.25rem 0.75rem !important;
     border-radius: 50px !important;
     color: white;
 }
-
+button#goToCheckout {
+    background-color: #0FA5C6 !important;
+}
 /* Full button */
 #lpCoursesAccordion .btn-secondary {
     background-color: #6c757d !important;
@@ -264,5 +268,3 @@
     opacity: 0.7 !important;
     pointer-events: none !important;
 }
-
-
